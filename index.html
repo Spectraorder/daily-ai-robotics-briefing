@@ -178,6 +178,7 @@
       margin: 0 0 20px;
     }
     .week-strip .day-chip {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -213,12 +214,15 @@
       border-color: var(--blue);
       color: #fff;
     }
-    .week-strip .day-chip.is-today {
-      box-shadow: inset 0 0 0 1.5px var(--orange, #e8710a);
-      color: var(--orange, #e8710a);
-    }
-    .week-strip .day-chip.is-today .dow::after {
-      content: ' · today';
+    .week-strip .day-chip.is-today .today-dot {
+      position: absolute;
+      left: 50%;
+      bottom: -8px;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
     }
     .dateline {
       margin: 0 0 10px;
@@ -994,6 +998,11 @@
           dow.textContent = DOW_SHORT[i];
           chip.appendChild(glyph);
           chip.appendChild(dow);
+          if (dayIso === todayIso) {
+            var dot = document.createElement('span');
+            dot.className = 'today-dot';
+            chip.appendChild(dot);
+          }
           weekStripEl.appendChild(chip);
         }
       }
