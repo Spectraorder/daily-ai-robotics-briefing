@@ -602,6 +602,7 @@
         <h1>Daily AI<br />Robotics Briefing</h1>
         <p class="dek" id="dek"></p>
       </header>
+      <nav class="issue-index" id="issue-index" aria-label="Briefing sections"></nav>
       <div class="issue-content" id="issue-content"></div>
       <p class="issue-status" id="issue-status">Loading the latest issue…</p>
     </main>
@@ -749,6 +750,16 @@
         }
       }
 
+      var SECTION_META = {
+        'Papers': { badge: function (n) { return n + ' reads'; },
+                    card: function (n) { return n + ' research note' + (n === 1 ? '' : 's'); } },
+        'Hot Discussions': { badge: function (n) { return n + ' signals'; },
+                    card: function (n) { return n + ' field signal' + (n === 1 ? '' : 's'); } },
+        'Podcast Updates': { badge: function (n) { return n + ' episode' + (n === 1 ? '' : 's'); },
+                    card: function (n) { return n + ' episode' + (n === 1 ? '' : 's'); } }
+      };
+      var issueIndexEl = document.getElementById('issue-index');
+
       function sectionize(root) {
         // Group rendered nodes into <section class="section ..."> per <h2>.
         var nodes = Array.prototype.slice.call(root.childNodes);
@@ -759,8 +770,16 @@
             section = document.createElement('section');
             var cls = SECTION_CLASS[name] || '';
             section.className = 'section ' + cls;
+            if (cls) section.id = cls;
             root.insertBefore(section, node);
-            section.appendChild(node);
+            var heading = document.createElement('div');
+            heading.className = 'section-heading';
+            section.appendChild(heading);
+            heading.appendChild(node);
+            var badge = document.createElement('span');
+            badge.className = 'count';
+            badge.setAttribute('data-badge-for', name);
+            heading.appendChild(badge);
             var rule = document.createElement('div');
             rule.className = 'section-rule';
             rule.setAttribute('aria-hidden', 'true');
@@ -769,20 +788,53 @@
             section.appendChild(node);
           }
         });
-        // Wrap each item (title + following siblings) in .item containers.
+        // Wrap each item (title + following siblings) in .entry containers
+        // with the entry numbers the original page used (01, 02, ...).
         root.querySelectorAll('section.section').forEach(function (sec) {
           var kids = Array.prototype.slice.call(sec.children);
           var item = null;
+          var num = 0;
           kids.forEach(function (kid) {
             if (kid.tagName === 'H3' && kid.classList.contains('item-title')) {
-              item = document.createElement('div');
-              item.className = 'item';
+              num += 1;
+              item = document.createElement('article');
+              item.className = 'entry item';
               sec.insertBefore(item, kid);
+              var numEl = document.createElement('span');
+              numEl.className = 'entry-num';
+              numEl.textContent = (num < 10 ? '0' : '') + num;
+              item.appendChild(numEl);
               item.appendChild(kid);
             } else if (item) {
               item.appendChild(kid);
             }
           });
+          sec.setAttribute('data-item-count', num);
+        });
+        // Fill the count badges and build the issue-index cards under the
+        // header (Papers / Hot Discussions / Podcast Updates at a glance).
+        issueIndexEl.innerHTML = '';
+        root.querySelectorAll('section.section').forEach(function (sec) {
+          var h2 = sec.querySelector('h2');
+          if (!h2) return;
+          var name = h2.textContent.trim();
+          var meta = SECTION_META[name];
+          if (!meta) return;
+          var n = parseInt(sec.getAttribute('data-item-count') || '0', 10);
+          var badge = sec.querySelector('.count');
+          if (badge) badge.textContent = n ? meta.badge(n) : 'Nothing notable';
+          var a = document.createElement('a');
+          a.className = 'index-link ' + (SECTION_CLASS[name] || '');
+          a.href = '#' + (SECTION_CLASS[name] || '');
+          a.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          a.appendChild(document.createTextNode(name));
+          var sub = document.createElement('span');
+          sub.textContent = n ? meta.card(n) : 'Nothing notable today';
+          a.appendChild(sub);
+          issueIndexEl.appendChild(a);
         });
       }
 
