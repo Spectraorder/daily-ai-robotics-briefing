@@ -219,9 +219,13 @@
       color: #e8710a;
     }
     .week-strip .day-chip.is-issue.is-today .glyph {
-      background: #e8710a;
-      border-color: #e8710a;
+      /* Both markers at once, kept distinct: the report-date marker stays
+         the blue fill, and today adds a separate orange halo outside it
+         (white gap in between) instead of recoloring the fill. */
+      background: var(--blue);
+      border-color: var(--blue);
       color: #fff;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #e8710a;
     }
     .dateline {
       margin: 0 0 10px;
