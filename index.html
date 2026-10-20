@@ -172,6 +172,54 @@
       padding: 54px 64px 36px;
       border-top: 6px solid var(--blue);
     }
+    .week-strip {
+      display: flex;
+      gap: 6px;
+      margin: 0 0 20px;
+    }
+    .week-strip .day-chip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 40px;
+      padding: 7px 0 6px;
+      border-radius: 12px;
+      color: var(--muted);
+    }
+    .week-strip .day-chip .glyph {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid color-mix(in srgb, var(--muted) 45%, transparent);
+      font-size: .78rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .week-strip .day-chip .dow {
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .week-strip .day-chip.is-issue {
+      color: var(--blue);
+    }
+    .week-strip .day-chip.is-issue .glyph {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .week-strip .day-chip.is-today {
+      box-shadow: inset 0 0 0 1.5px var(--orange, #e8710a);
+      color: var(--orange, #e8710a);
+    }
+    .week-strip .day-chip.is-today .dow::after {
+      content: ' · today';
+    }
     .dateline {
       margin: 0 0 10px;
       color: var(--muted);
@@ -598,6 +646,7 @@
     </aside>
     <main class="page" id="latest">
       <header class="issue-head">
+        <div class="week-strip" id="week-strip" aria-label="Week at a glance"></div>
         <p class="dateline" id="dateline"></p>
         <h1>Daily AI<br />Robotics Briefing</h1>
         <p class="dek" id="dek"></p>
@@ -915,6 +964,40 @@
         sectionize(root);
       }
 
+      var weekStripEl = document.getElementById('week-strip');
+      var DOW_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      var DOW_GLYPH = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+      function buildWeekStrip(iso) {
+        // Monday-start week containing the viewed issue (same grouping as
+        // the sidebar). The issue's own day is filled; if the real today
+        // falls in this week it gets the orange "today" marker.
+        var d = parseDate(iso);
+        var monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+        var now = new Date();
+        var todayIso = now.getFullYear() + '-' +
+          ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+        weekStripEl.innerHTML = '';
+        for (var i = 0; i < 7; i++) {
+          var day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+          var dayIso = day.getFullYear() + '-' +
+            ('0' + (day.getMonth() + 1)).slice(-2) + '-' + ('0' + day.getDate()).slice(-2);
+          var chip = document.createElement('span');
+          chip.className = 'day-chip' +
+            (dayIso === iso ? ' is-issue' : '') +
+            (dayIso === todayIso ? ' is-today' : '');
+          var glyph = document.createElement('span');
+          glyph.className = 'glyph';
+          glyph.textContent = DOW_GLYPH[i];
+          var dow = document.createElement('span');
+          dow.className = 'dow';
+          dow.textContent = DOW_SHORT[i];
+          chip.appendChild(glyph);
+          chip.appendChild(dow);
+          weekStripEl.appendChild(chip);
+        }
+      }
+
       function loadIssue(iso) {
         var entry = null;
         manifest.forEach(function (e) { if (e.date === iso) entry = e; });
@@ -924,6 +1007,7 @@
         document.title = entry.title;
         datelineEl.textContent = DAYS[d.getDay()] + ' · ' +
           MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+        buildWeekStrip(iso);
         statusEl.style.display = '';
         statusEl.textContent = 'Loading…';
         contentEl.innerHTML = '';
