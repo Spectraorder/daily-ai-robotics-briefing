@@ -214,15 +214,14 @@
       border-color: var(--blue);
       color: #fff;
     }
-    .week-strip .day-chip.is-today .today-dot {
-      position: absolute;
-      left: 50%;
-      bottom: -8px;
-      transform: translateX(-50%);
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
+    .week-strip .day-chip.is-today .glyph {
+      border-color: #e8710a;
+      color: #e8710a;
+    }
+    .week-strip .day-chip.is-issue.is-today .glyph {
       background: #e8710a;
+      border-color: #e8710a;
+      color: #fff;
     }
     .dateline {
       margin: 0 0 10px;
@@ -998,11 +997,6 @@
           dow.textContent = DOW_SHORT[i];
           chip.appendChild(glyph);
           chip.appendChild(dow);
-          if (dayIso === todayIso) {
-            var dot = document.createElement('span');
-            dot.className = 'today-dot';
-            chip.appendChild(dot);
-          }
           weekStripEl.appendChild(chip);
         }
       }
