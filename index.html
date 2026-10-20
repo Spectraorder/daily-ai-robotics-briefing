@@ -815,6 +815,14 @@
             p.replaceWith(h3);
           }
         });
+        // Image paths in the MD files are written relative to reports/
+        // (../assets/...) so they also resolve on GitHub; the shell sits at
+        // the site root, so normalize them to root-relative asset paths.
+        root.querySelectorAll('img').forEach(function (img) {
+          var s = img.getAttribute('src') || '';
+          while (s.indexOf('../') === 0) s = s.slice(3);
+          if (s !== (img.getAttribute('src') || '')) img.setAttribute('src', s);
+        });
         // Images: <p><img></p> (+ optional <p><em>caption</em></p>) -> <figure>
         root.querySelectorAll('p').forEach(function (p) {
           var kids = Array.prototype.slice.call(p.childNodes).filter(function (n) {
